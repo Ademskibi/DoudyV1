@@ -37,7 +37,20 @@ class _LoginScreenState extends State<LoginScreen> {
                       try {
                         await auth.signInWithEmail(email: _emailCtrl.text.trim(), password: _passCtrl.text);
                         if (!mounted) return;
-                        final role = auth.appUser?.role ?? 'parent';
+                        // Wait briefly for AuthService to populate `appUser` from Firestore.
+                        const maxWait = Duration(seconds: 5);
+                        const poll = Duration(milliseconds: 250);
+                        var waited = Duration.zero;
+                        while (auth.appUser == null && waited < maxWait) {
+                          await Future.delayed(poll);
+                          waited += poll;
+                        }
+
+                        final role = auth.appUser?.role;
+                        if (role == null) {
+                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Unable to determine user role. Please try again.')));
+                          return;
+                        }
                         if (role == 'parent') {
                           GoRouter.of(context).go('/parent');
                         } else if (role == 'child') {
@@ -63,7 +76,19 @@ class _LoginScreenState extends State<LoginScreen> {
                 try {
                   await auth.signInWithGoogle();
                   if (!mounted) return;
-                  final role = auth.appUser?.role ?? 'parent';
+                  const maxWait = Duration(seconds: 5);
+                  const poll = Duration(milliseconds: 250);
+                  var waited = Duration.zero;
+                  while (auth.appUser == null && waited < maxWait) {
+                    await Future.delayed(poll);
+                    waited += poll;
+                  }
+
+                  final role = auth.appUser?.role;
+                  if (role == null) {
+                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Unable to determine user role. Please try again.')));
+                    return;
+                  }
                   if (role == 'parent') {
                     GoRouter.of(context).go('/parent');
                   } else if (role == 'child') {

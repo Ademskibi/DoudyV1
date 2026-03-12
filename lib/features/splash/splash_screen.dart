@@ -46,8 +46,23 @@ class _SplashScreenState extends State<SplashScreen> {
         return;
       }
       // ensure appUser is loaded from FirestoreService (AuthService listens already)
-      final role = auth.appUser?.role ?? 'parent';
-      debugPrint('Splash: routing to role=$role');
+      // If appUser isn't available yet (e.g. Firestore delays), wait briefly instead
+      // of defaulting to 'parent' which causes incorrect routing.
+      const maxWait = Duration(seconds: 5);
+      const poll = Duration(milliseconds: 250);
+      var waited = Duration.zero;
+      while (auth.appUser == null && waited < maxWait) {
+        await Future.delayed(poll);
+        waited += poll;
+      }
+
+      final role = auth.appUser?.role;
+      debugPrint('Splash: routing to role=$role (waited ${waited.inMilliseconds}ms)');
+      if (role == null) {
+        // Couldn't determine role reliably — go to login to allow re-auth/repair
+        GoRouter.of(context).go('/login');
+        return;
+      }
       if (role == 'parent') {
         GoRouter.of(context).go('/parent');
       } else if (role == 'child') {
