@@ -2,7 +2,14 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../../core/utils/responsive.dart';
 import '../../../../services/auth_service.dart';
+import 'package:douddyv1/games/chairs_game.dart';
+import 'package:douddyv1/games/ball_game.dart';
+import 'package:douddyv1/games/card_sort_game.dart';
+import 'package:douddyv1/games/jump_numbers_game.dart';
+import 'package:douddyv1/games/pizza_game.dart';
+import 'package:douddyv1/games/logico_game.dart';
 
 const double kTabletBreakpoint = 600;
 const double kMinTouchTarget = 44.0;
@@ -30,7 +37,6 @@ class _ChildHomeScreenState extends State<ChildHomeScreen> {
       final isTablet = width >= kTabletBreakpoint;
       final isPhoneLandscape = width < kTabletBreakpoint && orientation == Orientation.landscape;
 
-      // Columns: tablet 3-4, phone portrait 1-2, phone landscape 4+
       int columns;
       if (isTablet) {
         columns = width >= 1000 ? 4 : 3;
@@ -40,13 +46,11 @@ class _ChildHomeScreenState extends State<ChildHomeScreen> {
         columns = 2;
       }
 
-      // Padding: tablet generous 24-32, phone standard 16. Phone landscape reduces vertical padding.
       final horizontalPadding = isTablet
           ? (width * 0.03).clamp(24.0, 32.0) as double
           : 16.0;
       final verticalPadding = isPhoneLandscape ? 8.0 : 16.0;
 
-      // Font scaling: increase 20-30% on tablet
       final baseTextTheme = Theme.of(context).textTheme;
       final scale = isTablet ? 1.25 : 1.0;
 
@@ -61,7 +65,7 @@ class _ChildHomeScreenState extends State<ChildHomeScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              SizedBox(height: 8),
+              SizedBox(height: 1.5.h),
               Flexible(
                 flex: 0,
                 child: Row(
@@ -70,46 +74,61 @@ class _ChildHomeScreenState extends State<ChildHomeScreen> {
                     Flexible(
                       child: Text('Hi ${auth.appUser?.name ?? 'Friend'}!', style: greetingStyle, overflow: TextOverflow.ellipsis),
                     ),
-                    SizedBox(width: 8),
+                    SizedBox(width: 2.w),
                     ConstrainedBox(
-                      constraints: BoxConstraints(minWidth: kMinTouchTarget, minHeight: kMinTouchTarget),
+                      constraints: BoxConstraints(minWidth: 6.w, minHeight: 6.h),
                       child: InkWell(
                         onTap: () => auth.signOut(),
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(2.w),
                         child: Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Icon(Icons.logout, size: 20),
+                          padding: EdgeInsets.all(1.5.w),
+                          child: Icon(Icons.logout, size: 3.5.w),
                         ),
                       ),
                     ),
                   ],
                 ),
               ),
-              SizedBox(height: 12),
+              SizedBox(height: 2.h),
               Expanded(
                 child: LayoutBuilder(builder: (context, gridConstraints) {
                   return GridView.builder(
                     gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: columns,
-                      crossAxisSpacing: math.max(8.0, horizontalPadding / 4),
-                      mainAxisSpacing: math.max(8.0, verticalPadding / 2),
+                      crossAxisSpacing: math.max(2.w, horizontalPadding / 4),
+                      mainAxisSpacing: math.max(1.5.h, verticalPadding / 2),
                       childAspectRatio: (gridConstraints.maxWidth / columns) / ((gridConstraints.maxHeight) / math.max(3, columns)),
                     ),
-                    itemCount: 12,
+                    itemCount: 6,
                     itemBuilder: (context, index) {
+                      final games = [
+                        {'title': 'Chaises Musicales\nلعبة الكراسي', 'widget': ChairsGameScreen()},
+                        {'title': 'Passer la balle\nتمرير الكرة', 'widget': BallGameScreen()},
+                        {'title': 'Trier les cartes\nفرز الأرقام', 'widget': CardSortGameScreen()},
+                        {'title': 'Sauter sur les nombres\nالقفز على الأرقام', 'widget': JumpNumbersGameScreen()},
+                        {'title': 'Pizza Game\nلعبة البيتزا', 'widget': PizzaGameScreen()},
+                        {'title': 'Logico\nنشاط Logico', 'widget': LogicoGameScreen()},
+                      ];
+                      final g = games[index];
                       return ConstrainedBox(
-                        constraints: BoxConstraints(minWidth: kMinTouchTarget, minHeight: kMinTouchTarget),
+                        constraints: BoxConstraints(minWidth: 12.w, minHeight: 12.h),
                         child: InkWell(
-                          onTap: () {},
+                          onTap: () {
+                            Navigator.of(context).push(MaterialPageRoute(builder: (_) => g['widget'] as Widget));
+                          },
                           child: Container(
                             decoration: BoxDecoration(
-                              color: Theme.of(context).colorScheme.surface.withOpacity(0.8),
-                              borderRadius: BorderRadius.circular(12),
+                              color: Theme.of(context).colorScheme.primary.withOpacity(0.15),
+                              borderRadius: BorderRadius.circular(3.w),
                             ),
                             child: Center(
-                              child: FittedBox(
-                                fit: BoxFit.scaleDown,
-                                child: Text('Item ${index + 1}', style: baseTextTheme.bodyMedium?.copyWith(fontSize: (baseTextTheme.bodyMedium?.fontSize ?? 14.0) * scale) ?? TextStyle(fontSize: (baseTextTheme.bodyMedium?.fontSize ?? 14.0) * scale)),
+                              child: Padding(
+                                padding: EdgeInsets.all(2.w),
+                                child: Text(
+                                  g['title'] as String,
+                                  textAlign: TextAlign.center,
+                                  style: baseTextTheme.titleMedium?.copyWith(fontSize: (isTablet ? 2.6.sp : 2.0.sp) * scale),
+                                ),
                               ),
                             ),
                           ),
@@ -124,7 +143,6 @@ class _ChildHomeScreenState extends State<ChildHomeScreen> {
         ),
       );
 
-      // Decorated background preserved
       final decorated = DecoratedBox(
         decoration: BoxDecoration(
           image: DecorationImage(image: AssetImage('images/img.png'), fit: BoxFit.cover),
@@ -134,7 +152,6 @@ class _ChildHomeScreenState extends State<ChildHomeScreen> {
 
       if (isTablet) {
         return Scaffold(
-          appBar: AppBar(title: Text('Child Home'), toolbarHeight: appBarHeight),
           body: Row(
             children: [
               NavigationRail(
@@ -154,9 +171,7 @@ class _ChildHomeScreenState extends State<ChildHomeScreen> {
         );
       }
 
-      // Phone: use bottom navigation
       return Scaffold(
-        appBar: AppBar(title: Text('Child Home'), toolbarHeight: appBarHeight),
         body: decorated,
         bottomNavigationBar: BottomNavigationBar(
           currentIndex: _selectedIndex,
