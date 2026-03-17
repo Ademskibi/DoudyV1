@@ -1,42 +1,6 @@
-// lib/games/pizza_game.dart
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../widgets/game_scaffold.dart';
-import '../widgets/game_number_button.dart';
-import '../widgets/feedback_overlay.dart';
-import '../services/sound_service.dart';
-import '../core/utils/responsive.dart';
-
-class PizzaPainter extends CustomPainter {
-  final int slices;
-  PizzaPainter(this.slices);
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final center = Offset(size.width / 2, size.height / 2);
-    final radius = min(size.width, size.height) / 2;
-    final paint = Paint()..style = PaintingStyle.fill;
-    for (int i = 0; i < slices; i++) {
-      paint.color = Colors.orange.withOpacity(1 - (i % 2) * 0.08);
-      final start = (2 * pi / slices) * i - pi / 2;
-      final sweep = 2 * pi / slices;
-      final path = Path()..moveTo(center.dx, center.dy)..arcTo(Rect.fromCircle(center: center, radius: radius), start, sweep, false)..close();
-      canvas.drawPath(path, paint);
-    }
-    // pepperoni dots
-    final dotPaint = Paint()..color = Colors.red;
-    for (int i = 0; i < slices; i++) {
-      final angle = (2 * pi / slices) * i - pi / 2 + (pi / slices);
-      final px = center.dx + cos(angle) * radius * 0.5;
-      final py = center.dy + sin(angle) * radius * 0.5;
-      canvas.drawCircle(Offset(px, py), radius * 0.06, dotPaint);
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant PizzaPainter oldDelegate) => oldDelegate.slices != slices;
-}
 
 class PizzaGameScreen extends StatefulWidget {
   const PizzaGameScreen({super.key});
@@ -45,83 +9,256 @@ class PizzaGameScreen extends StatefulWidget {
   State<PizzaGameScreen> createState() => _PizzaGameScreenState();
 }
 
-class _PizzaGameScreenState extends State<PizzaGameScreen> with TickerProviderStateMixin, FeedbackMixin {
-  final Random _rnd = Random();
-  int _slices = 6;
-  int _score = 0;
-  int _lives = 3;
-  bool _locked = false;
-  FeedbackType? _lastFeedback;
-  List<int> _choices = [];
+class _PizzaGameScreenState extends State<PizzaGameScreen> {
+  final Random _random = Random();
+
+  int correctAnswer = 3;
+  List<int> options = [];
+
+  bool showFeedback = false;
+  bool isCorrect = false;
 
   @override
   void initState() {
     super.initState();
-    initFeedback();
-    _next();
+    _generateQuestion();
   }
 
-  void _restart() {
-    setState(() { _score = 0; _lives = 3; });
-    _next();
+void _generateQuestion() {
+  correctAnswer = _random.nextInt(8) + 2; // 2 → 9 slices
+
+  Set<int> uniqueOptions = {correctAnswer};
+
+  while (uniqueOptions.length < 4) {
+    int value = _random.nextInt(9) + 1;
+
+    // avoid duplicates automatically (Set)
+    uniqueOptions.add(value);
   }
 
-  void _next() {
-    final target = _rnd.nextInt(10) + 1;
-    final choices = <int>{target};
-    while (choices.length < 4) choices.add(_rnd.nextInt(10) + 1);
-    final list = choices.toList()..shuffle();
-    setState(() { _slices = target; _choices = list; _locked = false; });
-  }
+  options = uniqueOptions.toList();
+  options.shuffle();
 
-  void _showGameOver() {
-    showDialog<void>(context: context, builder: (c) => AlertDialog(title: Text('انتهت اللعبة', style: GoogleFonts.cairo()), content: Text('النقاط: $_score', style: GoogleFonts.cairo()), actions: [TextButton(onPressed: () { Navigator.of(c).pop(); _restart(); }, child: Text('العب مجدداً', style: GoogleFonts.cairo()))]));
-  }
+  setState(() {});
+}
 
-  Future<void> _onTap(int n) async {
-    if (_locked) return;
-    setState(() { _locked = true; });
-    if (n == _slices) {
-      _score++;
-      _lastFeedback = FeedbackType.correct;
-      feedbackController.show(FeedbackType.correct);
-      await SoundService.instance.playCorrect();
-      await Future.delayed(const Duration(milliseconds: 950));
-      _next();
-    } else {
-      _lives--;
-      _lastFeedback = FeedbackType.wrong;
-      feedbackController.show(FeedbackType.wrong);
-      await SoundService.instance.playWrong();
-      await Future.delayed(const Duration(milliseconds: 950));
-      if (_lives <= 0) _showGameOver(); else _next();
-    }
+  void _checkAnswer(int value) {
+    setState(() {
+      isCorrect = value == correctAnswer;
+      showFeedback = true;
+    });
+
+    Future.delayed(const Duration(milliseconds: 800), () {
+      setState(() {
+        showFeedback = false;
+      });
+      _generateQuestion();
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    final cols = SizeConfig.gridColumns(itemMinWidth: 90);
-    return GameScaffold(
-      title: 'لعبة البيتزا',
-      score: _score,
-      lives: _lives,
-      accentColor: Colors.deepOrange,
-      backgroundColor: Colors.orange.shade50,
-      onRestart: _restart,
-      child: Stack(children: [
-        Padding(
-          padding: EdgeInsets.all(3.w),
-          child: Column(children: [
-            SizedBox(height: 2.h),
-            SizedBox(height: 30.h, child: Center(child: AspectRatio(aspectRatio: 1, child: CustomPaint(painter: PizzaPainter(_slices))))),
-            SizedBox(height: 2.h),
-            Text('كم شريحة؟', style: GoogleFonts.cairo(textStyle: TextStyle(fontSize: SizeConfig.sp(18)))),
-            SizedBox(height: 2.h),
-            Expanded(child: GridView.count(crossAxisCount: cols, mainAxisSpacing: 2.h, crossAxisSpacing: 2.w, children: _choices.map((n) => Center(child: GameNumberButton(number: n, onTap: _onTap, color: Colors.deepOrange))).toList())),
-          ]),
+    return Scaffold(
+      body: Container(
+        width: double.infinity,
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              Color(0xFFFFF3E0),
+              Color(0xFFFFE0B2),
+            ],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
         ),
-        FeedbackOverlay(controllerHolder: feedbackController, lastTypeHolder: _lastFeedback),
-      ]),
+        child: SafeArea(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              // 🎯 Question
+              Text(
+                "كم شريحة؟",
+                style: GoogleFonts.cairo(
+                  fontSize: 30,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.brown,
+                ),
+              ),
+
+              // 🍕 Pizza
+              Stack(
+                alignment: Alignment.center,
+                children: [
+                  SizedBox(
+                    width: 200,
+                    height: 200,
+                    child: CustomPaint(
+                      painter: PizzaPainter(correctAnswer),
+                    ),
+                  ),
+
+                  // ✨ Feedback Animation
+                  if (showFeedback)
+                    AnimatedScale(
+                      scale: isCorrect ? 1.3 : 1.0,
+                      duration: const Duration(milliseconds: 300),
+                      child: Icon(
+                        isCorrect ? Icons.check_circle : Icons.cancel,
+                        color: isCorrect ? Colors.green : Colors.red,
+                        size: 100,
+                      ),
+                    ),
+                ],
+              ),
+
+              // 🔘 Options
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Wrap(
+                  spacing: 20,
+                  runSpacing: 20,
+                  alignment: WrapAlignment.center,
+                  children: options
+                      .map((e) => GameNumberButton(
+                            number: e,
+                            onTap: () => _checkAnswer(e),
+                          ))
+                      .toList(),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+//
+// 🍕 Pizza Painter
+//
+class PizzaPainter extends CustomPainter {
+  final int slices;
+
+  PizzaPainter(this.slices);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = size.center(Offset.zero);
+    final radius = size.width / 2;
+
+    final sliceAngle = (2 * pi) / slices;
+
+    // 🎨 Fill slices
+    for (int i = 0; i < slices; i++) {
+      final paint = Paint()
+        ..color = i % 2 == 0
+            ? Colors.orange
+            : Colors.deepOrangeAccent;
+
+      canvas.drawArc(
+        Rect.fromCircle(center: center, radius: radius),
+        i * sliceAngle,
+        sliceAngle,
+        true,
+        paint,
+      );
+    }
+
+    // ✨ Slice borders (LINES BETWEEN SLICES)
+    final linePaint = Paint()
+      ..color = Colors.white
+      ..strokeWidth = 3
+      ..style = PaintingStyle.stroke;
+
+    for (int i = 0; i < slices; i++) {
+      final angle = i * sliceAngle;
+
+      final x = center.dx + radius * cos(angle);
+      final y = center.dy + radius * sin(angle);
+
+      canvas.drawLine(center, Offset(x, y), linePaint);
+    }
+
+    // 🍕 Outer border
+    final border = Paint()
+      ..color = Colors.brown
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 4;
+
+    canvas.drawCircle(center, radius, border);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
+}
+
+//
+// 🔘 Number Button
+//
+class GameNumberButton extends StatefulWidget {
+  final int number;
+  final VoidCallback onTap;
+
+  const GameNumberButton({
+    super.key,
+    required this.number,
+    required this.onTap,
+  });
+
+  @override
+  State<GameNumberButton> createState() => _GameNumberButtonState();
+}
+
+class _GameNumberButtonState extends State<GameNumberButton> {
+  double scale = 1.0;
+
+  void _tapDown(TapDownDetails d) {
+    setState(() => scale = 0.9);
+  }
+
+  void _tapUp(TapUpDetails d) {
+    setState(() => scale = 1.0);
+    widget.onTap();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTapDown: _tapDown,
+      onTapUp: _tapUp,
+      onTapCancel: () => setState(() => scale = 1.0),
+      child: AnimatedScale(
+        scale: scale,
+        duration: const Duration(milliseconds: 100),
+        child: Container(
+          width: 80,
+          height: 80,
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [Colors.orange, Colors.deepOrange],
+            ),
+            shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black26,
+                blurRadius: 8,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Center(
+            child: Text(
+              widget.number.toString(),
+              style: GoogleFonts.poppins(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

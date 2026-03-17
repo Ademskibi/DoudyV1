@@ -7,7 +7,7 @@ import '../widgets/game_number_button.dart';
 import '../widgets/feedback_overlay.dart';
 import '../services/sound_service.dart';
 import '../core/utils/responsive.dart';
-import '../core/utils/responsive.dart';
+// import '../core/utils/responsive.dart';
 
 class ChairsGameScreen extends StatefulWidget {
   const ChairsGameScreen({super.key});

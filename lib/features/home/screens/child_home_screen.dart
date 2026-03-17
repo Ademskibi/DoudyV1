@@ -1,5 +1,4 @@
 import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../core/utils/responsive.dart';
@@ -127,7 +126,7 @@ class _ChildHomeScreenState extends State<ChildHomeScreen> {
                                 child: Text(
                                   g['title'] as String,
                                   textAlign: TextAlign.center,
-                                  style: baseTextTheme.titleMedium?.copyWith(fontSize: (isTablet ? 2.6.sp : 2.0.sp) * scale),
+                                  style: baseTextTheme.titleMedium?.copyWith(fontSize: (isTablet ? 2.8.sp : 2.5.sp) * scale),
                                 ),
                               ),
                             ),

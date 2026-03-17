@@ -16,7 +16,6 @@ class SizeConfig {
 
   static bool get isTablet => screenWidth >= 600;
 
-  /// Call at app start inside a Builder where MediaQuery is available.
   static void init(BuildContext context) {
     final mq = MediaQuery.of(context);
     screenWidth = mq.size.width;
@@ -28,19 +27,16 @@ class SizeConfig {
     _blockY = safeHeight / 100.0;
   }
 
-  /// Returns a size in logical pixels that is `percent` of safeWidth.
   static double w(double percent, {double? min, double? max}) {
     final v = (_blockX * percent).clamp(min ?? double.negativeInfinity, max ?? double.infinity);
     return v;
   }
 
-  /// Returns a size in logical pixels that is `percent` of safeHeight.
   static double h(double percent, {double? min, double? max}) {
     final v = (_blockY * percent).clamp(min ?? double.negativeInfinity, max ?? double.infinity);
     return v;
   }
 
-  /// Returns a scaled font size. On tablet it multiplies by 1.3.
   static double sp(double size, {double? min, double? max}) {
     final base = (( _blockX + _blockY ) / 2.0) * (size / 10.0);
     final scaled = isTablet ? base * 1.3 : base;
