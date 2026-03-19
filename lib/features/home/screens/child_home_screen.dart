@@ -1,187 +1,159 @@
-import 'dart:math' as math;
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import '../../../core/utils/responsive.dart';
-import '../../../../services/auth_service.dart';
-import 'package:douddyv1/games/chairs_game.dart';
-import 'package:douddyv1/games/ball_game.dart';
-import 'package:douddyv1/games/card_sort_game.dart';
-import 'package:douddyv1/games/jump_numbers_game.dart';
-import 'package:douddyv1/games/pizza_game.dart';
-import 'package:douddyv1/games/logico_game.dart';
+import 'package:flutter/services.dart';
+import 'numbers_screen.dart';
 
-const double kTabletBreakpoint = 600;
 const double kMinTouchTarget = 44.0;
 
-class ChildHomeScreen extends StatefulWidget {
+class ChildHomeScreen extends StatelessWidget {
   const ChildHomeScreen({super.key});
 
   @override
-  State<ChildHomeScreen> createState() => _ChildHomeScreenState();
-}
-
-class _ChildHomeScreenState extends State<ChildHomeScreen> {
-  int _selectedIndex = 0;
-
-  void _onNavSelected(int idx) => setState(() => _selectedIndex = idx);
-
-  @override
   Widget build(BuildContext context) {
-    final auth = Provider.of<AuthService>(context);
+    final isTablet = MediaQuery.of(context).size.width >= 600;
+    final horizontalPadding = isTablet ? 32.0 : 16.0;
 
-    return LayoutBuilder(builder: (context, constraints) {
-      final width = constraints.maxWidth;
-      final height = constraints.maxHeight;
-      final orientation = MediaQuery.of(context).orientation;
-      final isTablet = width >= kTabletBreakpoint;
-      final isPhoneLandscape = width < kTabletBreakpoint && orientation == Orientation.landscape;
-
-      int columns;
-      if (isTablet) {
-        columns = width >= 1000 ? 4 : 3;
-      } else if (isPhoneLandscape) {
-        columns = 4;
-      } else {
-        columns = 2;
-      }
-
-      final horizontalPadding = isTablet
-          ? (width * 0.03).clamp(24.0, 32.0) as double
-          : 16.0;
-      final verticalPadding = isPhoneLandscape ? 8.0 : 16.0;
-
-      final baseTextTheme = Theme.of(context).textTheme;
-      final scale = isTablet ? 1.25 : 1.0;
-
-      final titleFontSize = (baseTextTheme.titleLarge?.fontSize ?? 20.0) * scale;
-      final greetingStyle = baseTextTheme.titleLarge?.copyWith(fontSize: titleFontSize) ?? TextStyle(fontSize: titleFontSize);
-
-      final appBarHeight = isPhoneLandscape ? kToolbarHeight * 0.75 : kToolbarHeight;
-
-      Widget content = SafeArea(
+    return Scaffold(
+      body: SafeArea(
         child: Padding(
-          padding: EdgeInsets.symmetric(horizontal: horizontalPadding, vertical: verticalPadding),
+          padding: EdgeInsets.symmetric(horizontal: horizontalPadding, vertical: 20.0),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              SizedBox(height: 1.5.h),
-              Flexible(
-                flex: 0,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Flexible(
-                      child: Text('Hi ${auth.appUser?.name ?? 'Friend'}!', style: greetingStyle, overflow: TextOverflow.ellipsis),
-                    ),
-                    SizedBox(width: 2.w),
-                    ConstrainedBox(
-                      constraints: BoxConstraints(minWidth: 6.w, minHeight: 6.h),
-                      child: InkWell(
-                        onTap: () => auth.signOut(),
-                        borderRadius: BorderRadius.circular(2.w),
-                        child: Padding(
-                          padding: EdgeInsets.all(1.5.w),
-                          child: Icon(Icons.logout, size: 3.5.w),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('مرحبا 👋', style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w700)),
+                      SizedBox(height: 6),
+                      Text('اختَر نشاطًا مع دودي', style: Theme.of(context).textTheme.titleMedium),
+                    ],
+                  ),
+                ],
               ),
-              SizedBox(height: 2.h),
+
+              SizedBox(height: 28),
+
               Expanded(
-                child: LayoutBuilder(builder: (context, gridConstraints) {
-                  return GridView.builder(
-                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: columns,
-                      crossAxisSpacing: math.max(2.w, horizontalPadding / 4),
-                      mainAxisSpacing: math.max(1.5.h, verticalPadding / 2),
-                      childAspectRatio: (gridConstraints.maxWidth / columns) / ((gridConstraints.maxHeight) / math.max(3, columns)),
-                    ),
-                    itemCount: 6,
-                    itemBuilder: (context, index) {
-                      final games = [
-                        {'title': 'Chaises Musicales\nلعبة الكراسي', 'widget': ChairsGameScreen()},
-                        {'title': 'Passer la balle\nتمرير الكرة', 'widget': BallGameScreen()},
-                        {'title': 'Trier les cartes\nفرز الأرقام', 'widget': CardSortGameScreen()},
-                        {'title': 'Sauter sur les nombres\nالقفز على الأرقام', 'widget': JumpNumbersGameScreen()},
-                        {'title': 'Pizza Game\nلعبة البيتزا', 'widget': PizzaGameScreen()},
-                        {'title': 'Logico\nنشاط Logico', 'widget': LogicoGameScreen()},
-                      ];
-                      final g = games[index];
-                      return ConstrainedBox(
-                        constraints: BoxConstraints(minWidth: 12.w, minHeight: 12.h),
-                        child: InkWell(
+                child: LayoutBuilder(builder: (context, constraints) {
+                  final cardWidth = isTablet ? (constraints.maxWidth / 2) - 24 : constraints.maxWidth;
+                  return Center(
+                    child: Wrap(
+                      spacing: 20,
+                      runSpacing: 20,
+                      alignment: WrapAlignment.center,
+                      children: [
+                        _MainChoiceCard(
+                          width: cardWidth,
+                          title: 'تعلم مع دودي',
+                          subtitle: 'تعلم الأرقام والأشكال',
+                          icon: Icons.menu_book_rounded,
+                          colors: [Color(0xFF6EE7B7), Color(0xFF3B82F6)],
                           onTap: () {
-                            Navigator.of(context).push(MaterialPageRoute(builder: (_) => g['widget'] as Widget));
+                            HapticFeedback.lightImpact();
+                            Navigator.of(context).push(MaterialPageRoute(builder: (_) => const NumbersScreen()));
                           },
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: Theme.of(context).colorScheme.primary.withOpacity(0.15),
-                              borderRadius: BorderRadius.circular(3.w),
-                            ),
-                            child: Center(
-                              child: Padding(
-                                padding: EdgeInsets.all(2.w),
-                                child: Text(
-                                  g['title'] as String,
-                                  textAlign: TextAlign.center,
-                                  style: baseTextTheme.titleMedium?.copyWith(fontSize: (isTablet ? 2.8.sp : 2.5.sp) * scale),
-                                ),
-                              ),
-                            ),
-                          ),
                         ),
-                      );
-                    },
+                        _MainChoiceCard(
+                          width: cardWidth,
+                          title: 'قصة دودي',
+                          subtitle: 'استمع إلى قصص ممتعة',
+                          icon: Icons.auto_stories_rounded,
+                          colors: [Color(0xFFFBCFE8), Color(0xFFF472B6)],
+                          onTap: () {
+                            HapticFeedback.lightImpact();
+                            Navigator.of(context).push(MaterialPageRoute(builder: (_) => const _StoriesPlaceholder()));
+                          },
+                        ),
+                      ],
+                    ),
                   );
                 }),
               ),
             ],
           ),
         ),
-      );
+      ),
+    );
+  }
+}
 
-      final decorated = DecoratedBox(
-        decoration: BoxDecoration(
-          image: DecorationImage(image: AssetImage('images/img.png'), fit: BoxFit.cover),
-        ),
-        child: content,
-      );
+class _MainChoiceCard extends StatefulWidget {
+  final double width;
+  final String title;
+  final String subtitle;
+  final IconData icon;
+  final List<Color> colors;
+  final VoidCallback onTap;
 
-      if (isTablet) {
-        return Scaffold(
-          body: Row(
-            children: [
-              NavigationRail(
-                selectedIndex: _selectedIndex,
-                onDestinationSelected: _onNavSelected,
-                labelType: NavigationRailLabelType.all,
-                destinations: const [
-                  NavigationRailDestination(icon: Icon(Icons.home), label: Text('Home')),
-                  NavigationRailDestination(icon: Icon(Icons.book), label: Text('Lessons')),
-                  NavigationRailDestination(icon: Icon(Icons.settings), label: Text('Settings')),
-                ],
-              ),
-              VerticalDivider(width: 1),
-              Expanded(child: decorated),
-            ],
+  const _MainChoiceCard({required this.width, required this.title, required this.subtitle, required this.icon, required this.colors, required this.onTap});
+
+  @override
+  State<_MainChoiceCard> createState() => _MainChoiceCardState();
+}
+
+class _MainChoiceCardState extends State<_MainChoiceCard> with SingleTickerProviderStateMixin {
+  double _scale = 1.0;
+  void _onTapDown(TapDownDetails _) => setState(() => _scale = 0.97);
+  void _onTapUp(TapUpDetails _) => setState(() => _scale = 1.0);
+  void _onTapCancel() => setState(() => _scale = 1.0);
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTapDown: _onTapDown,
+      onTapUp: _onTapUp,
+      onTapCancel: _onTapCancel,
+      onTap: widget.onTap,
+      child: AnimatedScale(
+        duration: const Duration(milliseconds: 120),
+        scale: _scale,
+        child: ConstrainedBox(
+          constraints: BoxConstraints(minWidth: widget.width, maxWidth: widget.width, minHeight: 140),
+          child: Container(
+            padding: const EdgeInsets.all(16.0),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(colors: widget.colors, begin: Alignment.topLeft, end: Alignment.bottomRight),
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.12), blurRadius: 18, offset: Offset(0, 8))],
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 72,
+                  height: 72,
+                  decoration: BoxDecoration(color: Colors.white.withOpacity(0.9), shape: BoxShape.circle),
+                  child: Icon(widget.icon, size: 40, color: widget.colors.last),
+                ),
+                SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(widget.title, style: Theme.of(context).textTheme.titleLarge?.copyWith(color: Colors.white, fontWeight: FontWeight.bold)),
+                      SizedBox(height: 6),
+                      Text(widget.subtitle, style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.white70)),
+                    ],
+                  ),
+                )
+              ],
+            ),
           ),
-        );
-      }
-
-      return Scaffold(
-        body: decorated,
-        bottomNavigationBar: BottomNavigationBar(
-          currentIndex: _selectedIndex,
-          onTap: _onNavSelected,
-          items: const [
-            BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-            BottomNavigationBarItem(icon: Icon(Icons.book), label: 'Lessons'),
-            BottomNavigationBarItem(icon: Icon(Icons.settings), label: 'Settings'),
-          ],
         ),
-      );
-    });
+      ),
+    );
+  }
+}
+
+class _StoriesPlaceholder extends StatelessWidget {
+  const _StoriesPlaceholder({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text('قصة دودي')),
+      body: Center(child: Text('قريبًا: مكتبة القصص', style: Theme.of(context).textTheme.titleLarge)),
+    );
   }
 }
