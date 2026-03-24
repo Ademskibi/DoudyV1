@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'numbers_screen.dart';
+import 'stories_screen.dart';
 
 const double kMinTouchTarget = 44.0;
 
@@ -62,7 +63,7 @@ class ChildHomeScreen extends StatelessWidget {
                           colors: [Color(0xFFFBCFE8), Color(0xFFF472B6)],
                           onTap: () {
                             HapticFeedback.lightImpact();
-                            Navigator.of(context).push(MaterialPageRoute(builder: (_) => const _StoriesPlaceholder()));
+                            Navigator.of(context).push(MaterialPageRoute(builder: (_) => const StoriesScreen()));
                           },
                         ),
                       ],
@@ -87,11 +88,9 @@ class _MainChoiceCard extends StatefulWidget {
   final VoidCallback onTap;
 
   const _MainChoiceCard({required this.width, required this.title, required this.subtitle, required this.icon, required this.colors, required this.onTap});
-
   @override
   State<_MainChoiceCard> createState() => _MainChoiceCardState();
 }
-
 class _MainChoiceCardState extends State<_MainChoiceCard> with SingleTickerProviderStateMixin {
   double _scale = 1.0;
   void _onTapDown(TapDownDetails _) => setState(() => _scale = 0.97);
@@ -146,14 +145,4 @@ class _MainChoiceCardState extends State<_MainChoiceCard> with SingleTickerProvi
   }
 }
 
-class _StoriesPlaceholder extends StatelessWidget {
-  const _StoriesPlaceholder({super.key});
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text('قصة دودي')),
-      body: Center(child: Text('قريبًا: مكتبة القصص', style: Theme.of(context).textTheme.titleLarge)),
-    );
-  }
-}

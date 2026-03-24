@@ -6,6 +6,7 @@ import 'core/theme/app_theme.dart';
 import 'core/app_router.dart';
 import 'core/utils/responsive.dart';
 import 'services/auth_service.dart';
+import 'services/story_progress_service.dart';
 import 'firebase_options.dart';
 
 void main() async {
@@ -75,9 +76,11 @@ class _MyAppState extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (_) => AuthService(), // Firebase is ready by now
-      lazy: false,
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => AuthService(), lazy: false),
+        ChangeNotifierProvider(create: (_) => StoryProgressService()..init()),
+      ],
       child: Builder(builder: (inner) {
         SizeConfig.init(inner);
         return MaterialApp.router(
