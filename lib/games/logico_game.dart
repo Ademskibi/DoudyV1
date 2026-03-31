@@ -23,10 +23,8 @@ class _LogicoGameScreenState extends State<LogicoGameScreen>
   bool _locked = false;
 
   FeedbackType? _lastFeedback;
-
   List<int> _left = [];
   List<int> _right = [];
-
   int? _selectedLeft;
 
   Set<int> _matchedLeft = {};

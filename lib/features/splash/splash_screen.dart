@@ -72,7 +72,6 @@ class _SplashScreenState extends State<SplashScreen> {
       }
       return;
     } catch (e) {
-      debugPrint('Splash routing error: $e');
       if (!mounted) return;
       GoRouter.of(context).go('/login');
       return;
