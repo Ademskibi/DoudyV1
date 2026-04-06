@@ -40,8 +40,10 @@ dependencies:
   provider: ^6.1.2
   shared_preferences: ^2.3.2
   google_fonts: ^6.2.1
+  mobile_scanner: ^7.2.0
   # Use a newer audioplayers major that depends on http ^1.x to avoid conflicts
   audioplayers: ^5.0.0
+  sizer: ^2.0.15
   flutter_localizations:
     sdk: flutter
 
@@ -73,7 +75,7 @@ flutter:
   #   - images/a_dot_ham.jpeg
   assets:
     - images/
-    - assets/sounds/
+    # - assets/sounds/  # disabled: directory not present locally
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
